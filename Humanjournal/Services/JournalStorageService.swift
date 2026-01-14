@@ -10,6 +10,7 @@ enum StorageError: Error {
     case modelContextNotAvailable
     case entryNotFound
     case saveFailed
+    case entryAlreadyExistsForToday
 }
 
 @MainActor
@@ -28,6 +29,11 @@ final class JournalStorageService {
     func saveEntry(date: Date, content: String) throws -> JournalEntry {
         guard let context = modelContext else {
             throw StorageError.modelContextNotAvailable
+        }
+
+        // Check if entry already exists for this day - no overwrites allowed
+        if try getEntry(for: date) != nil {
+            throw StorageError.entryAlreadyExistsForToday
         }
 
         try encryptionService.ensureKeyExists()

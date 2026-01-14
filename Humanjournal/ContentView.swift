@@ -31,12 +31,6 @@ struct ContentView: View {
     }
 
     private func setupNotificationHandler() {
-        NotificationService.shared.onNotificationTapped = {
-            // Navigate to entry screen - handled by HomeView
-        }
+        NotificationService.shared.onNotificationTapped = {}
     }
-}
-
-#Preview {
-    ContentView()
 }

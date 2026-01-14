@@ -15,242 +15,110 @@ struct OnboardingView: View {
 
     let onComplete: () -> Void
 
-    private let totalSteps = 4
-
     var body: some View {
         VStack(spacing: 0) {
-            progressIndicator
-                .padding(.top, 20)
+            Spacer()
+                .frame(height: 100)
 
-            TabView(selection: $currentStep) {
-                welcomeStep.tag(0)
-                conceptStep.tag(1)
-                unlockDateStep.tag(2)
-                notificationStep.tag(3)
+            // Title
+            Text(titles[currentStep])
+                .font(.system(size: 34, weight: .bold))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+
+            // Subtitle
+            Text(subtitles[currentStep])
+                .font(.system(size: 17))
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+                .padding(.top, 12)
+
+            Spacer()
+
+            // Pickers
+            if currentStep == 1 {
+                DatePicker("", selection: $selectedUnlockDate, in: Calendar.current.date(byAdding: .month, value: 1, to: Date())!..., displayedComponents: .date)
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                    .frame(height: 200)
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(.easeInOut, value: currentStep)
 
-            navigationButtons
-                .padding(.horizontal, 24)
-                .padding(.bottom, 40)
-        }
-        .background(Color(.systemBackground))
-    }
-
-    private var progressIndicator: some View {
-        HStack(spacing: 8) {
-            ForEach(0..<totalSteps, id: \.self) { step in
-                Circle()
-                    .fill(step <= currentStep ? Color.accentColor : Color(.systemGray4))
-                    .frame(width: 8, height: 8)
-            }
-        }
-        .padding(.bottom, 20)
-    }
-
-    private var welcomeStep: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Image(systemName: "book.closed.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(.accent)
-
-            Text("Welcome to\nHumanjournal")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-
-            Text("A private space for your daily thoughts.")
-                .font(.title3)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-
-            Spacer()
-            Spacer()
-        }
-        .padding(.horizontal, 32)
-    }
-
-    private var conceptStep: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Image(systemName: "lock.fill")
-                .font(.system(size: 60))
-                .foregroundStyle(.accent)
-
-            Text("Write Now,\nRead Later")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-
-            VStack(alignment: .leading, spacing: 16) {
-                conceptRow(icon: "pencil", text: "Write a short entry every day")
-                conceptRow(icon: "eye.slash", text: "Entries stay hidden until unlock")
-                conceptRow(icon: "calendar", text: "Read everything at year's end")
-            }
-            .padding(.top, 8)
-
-            Spacer()
-            Spacer()
-        }
-        .padding(.horizontal, 32)
-    }
-
-    private func conceptRow(icon: String, text: String) -> some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundStyle(.accent)
-                .frame(width: 32)
-
-            Text(text)
-                .font(.body)
-        }
-    }
-
-    private var unlockDateStep: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Image(systemName: "calendar.badge.clock")
-                .font(.system(size: 60))
-                .foregroundStyle(.accent)
-
-            Text("Set Your\nUnlock Date")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-
-            DatePicker(
-                "Unlock Date",
-                selection: $selectedUnlockDate,
-                in: Calendar.current.date(byAdding: .month, value: 1, to: Date())!...,
-                displayedComponents: .date
-            )
-            .datePickerStyle(.compact)
-            .labelsHidden()
-
-            Text("This cannot be changed once set.")
-                .font(.callout)
-                .foregroundStyle(.red)
-                .fontWeight(.medium)
-
-            Spacer()
-            Spacer()
-        }
-        .padding(.horizontal, 32)
-    }
-
-    private var notificationStep: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            Image(systemName: "bell.fill")
-                .font(.system(size: 60))
-                .foregroundStyle(.accent)
-
-            Text("Daily\nReminder")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-
-            Text("We'll remind you to write each day.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-
-            DatePicker(
-                "Reminder Time",
-                selection: Binding(
-                    get: {
-                        Calendar.current.date(from: DateComponents(hour: notificationHour, minute: notificationMinute)) ?? Date()
-                    },
+            if currentStep == 2 {
+                DatePicker("", selection: Binding(
+                    get: { Calendar.current.date(from: DateComponents(hour: notificationHour, minute: notificationMinute)) ?? Date() },
                     set: { newValue in
                         let components = Calendar.current.dateComponents([.hour, .minute], from: newValue)
                         notificationHour = components.hour ?? 21
                         notificationMinute = components.minute ?? 0
                     }
-                ),
-                displayedComponents: .hourAndMinute
-            )
-            .datePickerStyle(.wheel)
-            .labelsHidden()
-
-            Spacer()
-        }
-        .padding(.horizontal, 32)
-    }
-
-    private var navigationButtons: some View {
-        HStack(spacing: 16) {
-            if currentStep > 0 {
-                Button("Back") {
-                    withAnimation {
-                        currentStep -= 1
-                    }
-                }
-                .buttonStyle(.bordered)
+                ), displayedComponents: .hourAndMinute)
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                    .frame(height: 200)
             }
 
             Spacer()
 
-            Button {
-                if currentStep < totalSteps - 1 {
-                    withAnimation {
-                        currentStep += 1
-                    }
+            // Button
+            Button(action: {
+                if currentStep < 2 {
+                    currentStep += 1
                 } else {
                     completeOnboarding()
                 }
-            } label: {
+            }) {
                 if isSettingUp {
                     ProgressView()
-                        .progressViewStyle(.circular)
-                        .tint(.white)
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
                 } else {
-                    Text(currentStep < totalSteps - 1 ? "Continue" : "Get Started")
+                    Text(currentStep == 2 ? "Get Started" : "Continue")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
                 }
             }
-            .buttonStyle(.borderedProminent)
+            .background(Color.black)
+            .cornerRadius(14)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 50)
             .disabled(isSettingUp)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white)
+        .ignoresSafeArea()
+    }
+
+    private var titles: [String] {
+        ["Humanjournal", "Pick your unlock date", "Daily reminder"]
+    }
+
+    private var subtitles: [String] {
+        [
+            "Write daily.\nRead at year's end.",
+            "You won't be able to read your entries\nuntil this date. This cannot be changed.",
+            "We'll nudge you at this time every day."
+        ]
     }
 
     private func completeOnboarding() {
         isSettingUp = true
-
         Task {
-            do {
-                try DeadlineService.shared.setUnlockDate(selectedUnlockDate)
-            } catch {
-                // Date already set, continue
-            }
-
+            do { try DeadlineService.shared.setUnlockDate(selectedUnlockDate) } catch {}
             let granted = await NotificationService.shared.requestAuthorization()
             if granted {
-                try? await NotificationService.shared.scheduleDailyReminder(
-                    hour: notificationHour,
-                    minute: notificationMinute
-                )
+                try? await NotificationService.shared.scheduleDailyReminder(hour: notificationHour, minute: notificationMinute)
             }
-
             userSettings.notificationHour = notificationHour
             userSettings.notificationMinute = notificationMinute
             userSettings.hasCompletedOnboarding = true
-
             await MainActor.run {
                 isSettingUp = false
                 onComplete()
             }
         }
-    }
-}
-
-#Preview {
-    OnboardingView {
-        print("Onboarding complete")
     }
 }

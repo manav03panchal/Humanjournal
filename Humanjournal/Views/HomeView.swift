@@ -14,25 +14,27 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 32) {
+            VStack(spacing: 0) {
                 Spacer()
 
                 if isUnlocked {
-                    unlockedView
+                    unlockedContent
                 } else {
-                    countdownView
+                    lockedContent
                 }
 
                 Spacer()
 
                 if !isUnlocked {
-                    writeButton
+                    bottomContent
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 50)
                 }
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 40)
-            .navigationTitle("Humanjournal")
-            .navigationBarTitleDisplayMode(.inline)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.white)
+            .ignoresSafeArea()
+            .navigationBarHidden(true)
             .task {
                 await refreshState()
             }
@@ -44,98 +46,87 @@ struct HomeView: View {
         }
     }
 
-    private var countdownView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "lock.fill")
-                .font(.system(size: 50))
-                .foregroundStyle(.secondary)
-
+    private var lockedContent: some View {
+        VStack(spacing: 32) {
             VStack(spacing: 8) {
                 Text("\(daysRemaining)")
-                    .font(.system(size: 72, weight: .bold, design: .rounded))
+                    .font(.system(size: 96, weight: .bold, design: .rounded))
+                    .foregroundColor(.black)
 
-                Text(daysRemaining == 1 ? "day remaining" : "days remaining")
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
+                Text(daysRemaining == 1 ? "day left" : "days left")
+                    .font(.system(size: 20))
+                    .foregroundColor(.gray)
             }
 
-            statsView
+            HStack(spacing: 48) {
+                VStack(spacing: 4) {
+                    Text("\(entryCount)")
+                        .font(.system(size: 24, weight: .semibold, design: .rounded))
+                        .foregroundColor(.black)
+                    Text("entries")
+                        .font(.system(size: 13))
+                        .foregroundColor(.gray)
+                }
+
+                VStack(spacing: 4) {
+                    Image(systemName: hasWrittenToday ? "checkmark" : "minus")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(hasWrittenToday ? .green : .gray)
+                    Text("today")
+                        .font(.system(size: 13))
+                        .foregroundColor(.gray)
+                }
+            }
         }
     }
 
-    private var statsView: some View {
-        HStack(spacing: 40) {
-            statItem(value: "\(entryCount)", label: "entries")
-
-            Divider()
-                .frame(height: 40)
-
-            statItem(
-                value: hasWrittenToday ? "Done" : "Not yet",
-                label: "today",
-                highlight: !hasWrittenToday
-            )
-        }
-        .padding(.top, 16)
-    }
-
-    private func statItem(value: String, label: String, highlight: Bool = false) -> some View {
-        VStack(spacing: 4) {
-            Text(value)
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundStyle(highlight ? .accent : .primary)
-
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private var unlockedView: some View {
+    private var unlockedContent: some View {
         VStack(spacing: 24) {
-            Image(systemName: "lock.open.fill")
-                .font(.system(size: 50))
-                .foregroundStyle(.accent)
+            Text("Unlocked")
+                .font(.system(size: 34, weight: .bold))
+                .foregroundColor(.black)
 
-            Text("Your Journal\nis Unlocked")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .multilineTextAlignment(.center)
-
-            Text("\(entryCount) entries await you")
-                .font(.title3)
-                .foregroundStyle(.secondary)
+            Text("\(entryCount) entries")
+                .font(.system(size: 17))
+                .foregroundColor(.gray)
 
             NavigationLink {
                 ArchiveView()
             } label: {
-                Text("View Entries")
-                    .fontWeight(.semibold)
+                Text("Read Your Journal")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .frame(height: 56)
+                    .background(Color.black)
+                    .cornerRadius(14)
             }
+            .padding(.horizontal, 24)
             .padding(.top, 16)
         }
     }
 
-    private var writeButton: some View {
-        Button {
-            showingEntrySheet = true
-        } label: {
-            HStack {
-                Image(systemName: hasWrittenToday ? "checkmark.circle.fill" : "pencil")
-                Text(hasWrittenToday ? "Edit Today's Entry" : "Write Today's Entry")
+    @ViewBuilder
+    private var bottomContent: some View {
+        if hasWrittenToday {
+            // Already written - show done state, no button
+            Text("Done for today")
+                .font(.system(size: 17, weight: .medium))
+                .foregroundColor(.gray)
+                .frame(height: 56)
+        } else {
+            // Not written yet - show write button
+            Button {
+                showingEntrySheet = true
+            } label: {
+                Text("Write")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Color.black)
+                    .cornerRadius(14)
             }
-            .fontWeight(.semibold)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(hasWrittenToday ? Color(.systemGray5) : Color.accentColor)
-            .foregroundStyle(hasWrittenToday ? .primary : .white)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 
@@ -156,12 +147,6 @@ struct HomeView: View {
         do {
             _ = try JournalStorageService.shared.saveEntry(date: Date(), content: content)
             await refreshState()
-        } catch {
-            // Handle error silently for MVP
-        }
+        } catch {}
     }
-}
-
-#Preview {
-    HomeView()
 }

@@ -77,7 +77,7 @@ final class NotificationService: NSObject {
               let trigger = request.trigger as? UNCalendarNotificationTrigger else {
             return nil
         }
-        return trigger.dateMatching
+        return trigger.dateComponents
     }
 }
 
