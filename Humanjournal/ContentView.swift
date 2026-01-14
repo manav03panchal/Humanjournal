@@ -6,14 +6,34 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var userSettings = UserSettings.shared
+    @State private var showOnboarding: Bool
+
+    init() {
+        _showOnboarding = State(initialValue: !UserSettings.shared.hasCompletedOnboarding)
+    }
+
     var body: some View {
-        VStack {
-            Image(systemName: "book.closed")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Humanjournal")
+        Group {
+            if showOnboarding {
+                OnboardingView {
+                    withAnimation {
+                        showOnboarding = false
+                    }
+                }
+            } else {
+                HomeView()
+            }
         }
-        .padding()
+        .onAppear {
+            setupNotificationHandler()
+        }
+    }
+
+    private func setupNotificationHandler() {
+        NotificationService.shared.onNotificationTapped = {
+            // Navigate to entry screen - handled by HomeView
+        }
     }
 }
 
