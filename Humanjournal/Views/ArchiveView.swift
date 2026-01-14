@@ -4,6 +4,17 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
+#if os(iOS)
+private let platformSecondaryBackground = UIColor.systemGray6
+#elseif os(macOS)
+private let platformSecondaryBackground = NSColor.controlBackgroundColor
+#endif
 
 enum ArchiveViewMode: String, CaseIterable {
     case list = "List"
@@ -47,7 +58,7 @@ struct ArchiveView: View {
             .navigationTitle("Your Journal")
             .toolbar {
                 if !entries.isEmpty && errorMessage == nil {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarItem(placement: .automatic) {
                         Picker("View Mode", selection: $viewMode) {
                             ForEach(ArchiveViewMode.allCases, id: \.self) { mode in
                                 Image(systemName: mode.icon)
@@ -121,7 +132,7 @@ struct ArchiveView: View {
                         }
                         .padding()
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.systemGray6))
+                        .background(Color(platformSecondaryBackground))
                         .cornerRadius(12)
                     }
                     .buttonStyle(.plain)
@@ -237,9 +248,11 @@ struct EntryDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .navigationTitle("Entry")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         dismiss()
                     }

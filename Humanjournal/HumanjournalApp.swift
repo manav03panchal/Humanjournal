@@ -28,7 +28,14 @@ struct HumanjournalApp: App {
                 .onAppear {
                     JournalStorageService.shared.configure(with: sharedModelContainer.mainContext)
                 }
+                #if os(macOS)
+                .frame(minWidth: 400, idealWidth: 500, minHeight: 500, idealHeight: 700)
+                #endif
         }
         .modelContainer(sharedModelContainer)
+        #if os(macOS)
+        .defaultSize(width: 500, height: 700)
+        .windowResizability(.contentSize)
+        #endif
     }
 }
