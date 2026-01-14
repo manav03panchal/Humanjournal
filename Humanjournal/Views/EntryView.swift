@@ -4,6 +4,17 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
+#if os(iOS)
+private let platformBackground = UIColor.systemBackground
+#elseif os(macOS)
+private let platformBackground = NSColor.windowBackgroundColor
+#endif
 
 struct EntryView: View {
     @Environment(\.dismiss) private var dismiss
@@ -39,9 +50,11 @@ struct EntryView: View {
 
                 textEditor
             }
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     saveButton
                 }
             }
@@ -76,7 +89,7 @@ struct EntryView: View {
             .font(.body)
             .padding(.horizontal, 12)
             .scrollContentBackground(.hidden)
-            .background(Color(.systemBackground))
+            .background(Color(platformBackground))
     }
 
     private var saveButton: some View {
@@ -103,8 +116,10 @@ struct EntryView: View {
 
         await onSave(content)
 
+        #if os(iOS)
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
+        #endif
 
         hasUnsavedChanges = false
         isSaving = false

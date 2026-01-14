@@ -33,8 +33,10 @@ struct HomeView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.white)
+            #if os(iOS)
             .ignoresSafeArea()
-            .navigationBarHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
+            #endif
             .task {
                 await refreshState()
             }

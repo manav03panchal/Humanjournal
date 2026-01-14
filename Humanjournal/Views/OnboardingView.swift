@@ -39,7 +39,11 @@ struct OnboardingView: View {
             // Pickers
             if currentStep == 1 {
                 DatePicker("", selection: $selectedUnlockDate, in: Calendar.current.date(byAdding: .month, value: 1, to: Date())!..., displayedComponents: .date)
+                    #if os(iOS)
                     .datePickerStyle(.wheel)
+                    #else
+                    .datePickerStyle(.graphical)
+                    #endif
                     .labelsHidden()
                     .frame(height: 200)
             }
@@ -53,7 +57,11 @@ struct OnboardingView: View {
                         notificationMinute = components.minute ?? 0
                     }
                 ), displayedComponents: .hourAndMinute)
+                    #if os(iOS)
                     .datePickerStyle(.wheel)
+                    #else
+                    .datePickerStyle(.stepperField)
+                    #endif
                     .labelsHidden()
                     .frame(height: 200)
             }
@@ -89,7 +97,9 @@ struct OnboardingView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
+        #if os(iOS)
         .ignoresSafeArea()
+        #endif
     }
 
     private var titles: [String] {

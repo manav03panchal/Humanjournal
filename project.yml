@@ -3,13 +3,18 @@ options:
   bundleIdPrefix: com.humanjournal
   deploymentTarget:
     iOS: "17.0"
+    macOS: "14.0"
 
 targets:
   Humanjournal:
     type: application
-    platform: iOS
+    supportedDestinations: [iOS, macOS]
     sources:
-      - Humanjournal
+      - path: Humanjournal
+        excludes:
+          - "Resources/LaunchScreen.storyboard"
+      - path: Humanjournal/Resources/LaunchScreen.storyboard
+        destinationFilters: [iOS]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.humanjournal.app
@@ -17,5 +22,17 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: 1.0
-        INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
-        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGNING_REQUIRED: NO
+      configs:
+        debug:
+          INFOPLIST_KEY_UILaunchStoryboardName[sdk=iphoneos*]: LaunchScreen
+          INFOPLIST_KEY_UILaunchStoryboardName[sdk=iphonesimulator*]: LaunchScreen
+          INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]: YES
+          INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]: YES
+        release:
+          INFOPLIST_KEY_UILaunchStoryboardName[sdk=iphoneos*]: LaunchScreen
+          INFOPLIST_KEY_UILaunchStoryboardName[sdk=iphonesimulator*]: LaunchScreen
+          INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]: YES
+          INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]: YES
