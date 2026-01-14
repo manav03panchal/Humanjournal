@@ -5,11 +5,31 @@
 
 import SwiftUI
 
+enum ArchiveViewMode: String, CaseIterable {
+    case list = "List"
+    case calendar = "Calendar"
+
+    var icon: String {
+        switch self {
+        case .list: return "list.bullet"
+        case .calendar: return "calendar"
+        }
+    }
+}
+
 struct ArchiveView: View {
     @State private var entries: [(entry: JournalEntry, content: String)] = []
     @State private var selectedEntry: (entry: JournalEntry, content: String)?
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var viewMode: ArchiveViewMode = .list
+    @State private var selectedDate: Date = Date()
+
+    private var entriesByDate: [Date: (entry: JournalEntry, content: String)] {
+        Dictionary(uniqueKeysWithValues: entries.map { item in
+            (Calendar.current.startOfDay(for: item.entry.date), item)
+        })
+    }
 
     var body: some View {
         NavigationStack {
@@ -21,10 +41,24 @@ struct ArchiveView: View {
                 } else if entries.isEmpty {
                     emptyView
                 } else {
-                    entryList
+                    contentView
                 }
             }
             .navigationTitle("Your Journal")
+            .toolbar {
+                if !entries.isEmpty && errorMessage == nil {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Picker("View Mode", selection: $viewMode) {
+                            ForEach(ArchiveViewMode.allCases, id: \.self) { mode in
+                                Image(systemName: mode.icon)
+                                    .tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 100)
+                    }
+                }
+            }
             .task {
                 await loadEntries()
             }
@@ -34,6 +68,16 @@ struct ArchiveView: View {
             )) { item in
                 EntryDetailView(entry: item.entry, content: item.content)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var contentView: some View {
+        switch viewMode {
+        case .list:
+            entryList
+        case .calendar:
+            calendarView
         }
     }
 
@@ -47,6 +91,50 @@ struct ArchiveView: View {
             .buttonStyle(.plain)
         }
         .listStyle(.plain)
+    }
+
+    private var calendarView: some View {
+        VStack(spacing: 0) {
+            DatePicker(
+                "Select Date",
+                selection: $selectedDate,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .padding(.horizontal)
+
+            Divider()
+
+            if let item = entriesByDate[Calendar.current.startOfDay(for: selectedDate)] {
+                ScrollView {
+                    Button {
+                        selectedEntry = item
+                    } label: {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(formattedDate(item.entry.date))
+                                .font(.headline)
+
+                            Text(item.content)
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(5)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                    }
+                    .buttonStyle(.plain)
+                    .padding()
+                }
+            } else {
+                ContentUnavailableView(
+                    "No Entry",
+                    systemImage: "doc.text",
+                    description: Text("No journal entry for this date.")
+                )
+            }
+        }
     }
 
     private var emptyView: some View {
@@ -63,6 +151,12 @@ struct ArchiveView: View {
             systemImage: "exclamationmark.triangle",
             description: Text(message)
         )
+    }
+
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .full
+        return formatter.string(from: date)
     }
 
     private func loadEntries() async {
